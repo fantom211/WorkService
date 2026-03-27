@@ -187,5 +187,86 @@ namespace WorkService.Services
             task.Status = StatusTask.InProgress;
             await _context.SaveChangesAsync();
         }
+
+        public async Task<UpdateTaskDto?> UpdateTask(Guid taskId, UpdateTaskDto dto)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.TaskTechnologies)
+                .ThenInclude(tt => tt.Technology)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
+
+            if (task == null) return null;
+
+            //частичное обновление полей
+            if (!string.IsNullOrWhiteSpace(dto.Title))
+                task.Title = dto.Title;
+
+            if (!string.IsNullOrWhiteSpace(dto.Description))
+                task.Description = dto.Description;
+
+            if (dto.Budget.HasValue)
+                task.Budget = dto.Budget.Value;
+
+            if (!string.IsNullOrWhiteSpace(dto.Category))
+                task.Category = dto.Category;
+
+            if (!string.IsNullOrWhiteSpace(dto.Specialization))
+                task.Specialization = dto.Specialization;
+
+            if (dto.Deadline.HasValue)
+                task.Deadline = dto.Deadline;
+
+            if (dto.Status.HasValue)
+                task.Status = dto.Status.Value;
+
+            //технологии
+            if (dto.Technologies != null && dto.Technologies.Any())
+            {
+                var normalizedTechs = dto.Technologies
+                    .Select(t => t.Trim().ToLower())
+                    .Distinct()
+                    .ToList();
+
+                var oldTechs = task.TaskTechnologies.ToList();
+
+                var existingTechs = await _context.Technologies
+                    .Where(t => normalizedTechs.Contains(t.Name.ToLower()))
+                    .ToListAsync();
+
+                var newTechs = normalizedTechs
+                    .Except(existingTechs.Select(t => t.Name.ToLower()))
+                    .Select(t => new Technology { Name = t })
+                    .ToList();
+
+                //добавление новых технологий в базу
+                _context.Technologies.AddRange(newTechs);
+                await _context.SaveChangesAsync();
+
+                task.TaskTechnologies.Clear();
+                foreach (var tech in existingTechs.Concat(newTechs))
+                {
+                    task.TaskTechnologies.Add(new TaskTechnology
+                    {
+                        TaskId = task.Id,
+                        Technology = tech
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new UpdateTaskDto
+            {
+                Title = task.Title,
+                Description = task.Description,
+                Budget = task.Budget,
+                Category = task.Category,
+                Specialization = task.Specialization,
+                Deadline = task.Deadline,
+                Status = task.Status,
+                Technologies = task.TaskTechnologies.Select(tt => tt.Technology.Name).ToList()
+            };
+
+        }
     }
 }

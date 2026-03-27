@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WorkService.Models.DTOs;
 using WorkService.Models.Entities;
 using WorkService.Models.Enums;
@@ -70,5 +71,17 @@ namespace WorkService.Controllers
             await _service.HandleProposalAccepted(dto.TaskId);
             return Ok();
         }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateTask(Guid id, [FromBody] UpdateTaskDto dto)
+        {
+            var result = await _service.UpdateTask(id, dto);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
     }
 }
