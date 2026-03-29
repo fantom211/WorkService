@@ -20,6 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<TaskRepository>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ServiceProposal>();
 
 builder.Services.AddHttpClient<TaskService>(client =>
 {

@@ -16,15 +16,18 @@ namespace WorkService.Services
         private readonly AppDbContext _context;
         private NotificationService _notifyService;
         private readonly HttpClient _httpClient;
+        private readonly ServiceProposal _proposalService;
 
         public TaskService(
             AppDbContext context,
             NotificationService notifyService,
-            HttpClient httpClient)
+            HttpClient httpClient,
+            ServiceProposal proposalService)
         {
             _context = context;
             _notifyService = notifyService;
             _httpClient = httpClient;
+            _proposalService = proposalService;
         }
 
         public async Task<PagedResultDto<TaskDto>> GetAll(int page, int limit)
@@ -69,16 +72,12 @@ namespace WorkService.Services
                 Page = page,
                 Limit = limit
             };
-
         }
 
-        public async Task<PagedResultDto<TaskDto>> GetMyTasks(Guid id, int page, int limit)
+        public async Task<PagedResultDto<MyTasksDto>> GetMyTasks(Guid id, int page, int limit)
         {
             var query = _context.Tasks
-                .Where(t=>t.CreatedByUserId == id)
-                .Include(t => t.TaskTechnologies)
-                .ThenInclude(tt => tt.Technology)
-                .AsQueryable();
+                .Where(t => t.CreatedByUserId == id);
 
             var total = await query.CountAsync();
 
@@ -86,33 +85,38 @@ namespace WorkService.Services
                 .OrderByDescending(t => t.CreatedAt)
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .ToListAsync();
-
-            var data = tasks.Select(t => new TaskDto
-            {
-                Id = t.Id,
-                CreatedByUserId = t.CreatedByUserId,
-                Title = t.Title,
-                Description = t.Description,
-                Budget = t.Budget,
-                Category = t.Category,
-                Specialization = t.Specialization,
-                CreatedAt = t.CreatedAt,
-                Deadline = (DateTime)t.Deadline,
-                Status = t.Status,
-                Technologies = t.TaskTechnologies
-                .Select(tt => new TechnologyDto
+                .Select(t => new MyTasksDto
                 {
-                    Id = tt.Technology.Id,
-                    Name = tt.Technology.Name
-                }).ToList()
-            }).ToList();
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Budget = (float)t.Budget,
+                    Category = t.Category,
+                    Specialization = t.Specialization,
+                    Deadline = (DateTime)t.Deadline,
+                    Status = t.Status,
+                    Technologies = t.TaskTechnologies
+                    .Select(tt => new TechnologyDto
+                    {
+                        Id = tt.Technology.Id,
+                        Name = tt.Technology.Name
+                    }).ToList()
+                }).ToListAsync();
 
-            Console.WriteLine($"Полученный айди: {id}");
+            var taskIds = tasks.Select(t => t.Id).ToList();
+            var executorsMap = await _proposalService.GetExecutorsByTaskIds(taskIds);
 
-            return new PagedResultDto<TaskDto>
+            foreach (var task in tasks)
             {
-                Data = data,
+                if (executorsMap.TryGetValue(task.Id, out var executors))
+                {
+                    task.Executors = executors;
+                }
+            }
+
+            return new PagedResultDto<MyTasksDto>
+            {
+                Data = tasks,
                 Total = total,
                 Page = page,
                 Limit = limit
