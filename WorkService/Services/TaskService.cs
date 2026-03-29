@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using ProposalService.Services;
 using WorkService.Data;
@@ -71,6 +72,52 @@ namespace WorkService.Services
 
         }
 
+        public async Task<PagedResultDto<TaskDto>> GetMyTasks(Guid id, int page, int limit)
+        {
+            var query = _context.Tasks
+                .Where(t=>t.CreatedByUserId == id)
+                .Include(t => t.TaskTechnologies)
+                .ThenInclude(tt => tt.Technology)
+                .AsQueryable();
+
+            var total = await query.CountAsync();
+
+            var tasks = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .ToListAsync();
+
+            var data = tasks.Select(t => new TaskDto
+            {
+                Id = t.Id,
+                CreatedByUserId = t.CreatedByUserId,
+                Title = t.Title,
+                Description = t.Description,
+                Budget = t.Budget,
+                Category = t.Category,
+                Specialization = t.Specialization,
+                CreatedAt = t.CreatedAt,
+                Deadline = (DateTime)t.Deadline,
+                Status = t.Status,
+                Technologies = t.TaskTechnologies
+                .Select(tt => new TechnologyDto
+                {
+                    Id = tt.Technology.Id,
+                    Name = tt.Technology.Name
+                }).ToList()
+            }).ToList();
+
+            Console.WriteLine($"Полученный айди: {id}");
+
+            return new PagedResultDto<TaskDto>
+            {
+                Data = data,
+                Total = total,
+                Page = page,
+                Limit = limit
+            };
+        }
         public async Task<TaskDto> GetById(Guid id)
         {
             var task = await _context.Tasks
@@ -308,5 +355,7 @@ namespace WorkService.Services
             };
 
         }
+
+        
     }
 }

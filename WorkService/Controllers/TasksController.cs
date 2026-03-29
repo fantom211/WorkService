@@ -21,7 +21,7 @@ namespace WorkService.Controllers
 
         // GET: api/tasks
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page=1, [FromQuery] int limit = 10)
+        public async Task<IActionResult> GetAll([FromQuery] int page=1, [FromQuery] int limit = 18)
         {
             const int maxLimit = 50;
 
@@ -52,6 +52,23 @@ namespace WorkService.Controllers
         public async Task<IActionResult> GetFiltered()
         {
             var tasks = await _service.GetFiltered();
+            return Ok(tasks);
+        }
+
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyTasks([FromHeader(Name = "X-User-Id")] Guid id, [FromQuery] int page = 1, [FromQuery] int limit = 18)
+        {
+            const int maxLimit = 50;
+
+            if (page < 1)
+                page = 1;
+
+            if (limit < 1)
+                limit = 10;
+
+            if (limit > maxLimit)
+                limit = maxLimit;
+            var tasks = await _service.GetMyTasks(id, page, limit);
             return Ok(tasks);
         }
 
