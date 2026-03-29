@@ -26,14 +26,22 @@ namespace WorkService.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<TaskDto>> GetAll()
+        public async Task<PagedResultDto<TaskDto>> GetAll(int page, int limit)
         {
-            var tasks = await _context.Tasks
+            var query = _context.Tasks
                 .Include(t => t.TaskTechnologies)
                 .ThenInclude(tt => tt.Technology)
+                .AsQueryable();
+
+            var total = await query.CountAsync();
+
+            var tasks = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * limit)
+                .Take(limit)
                 .ToListAsync();
 
-            return tasks.Select(t => new TaskDto
+            var data = tasks.Select(t => new TaskDto
             {
                 Id = t.Id,
                 CreatedByUserId = t.CreatedByUserId,
@@ -45,11 +53,21 @@ namespace WorkService.Services
                 CreatedAt = t.CreatedAt,
                 Deadline = (DateTime)t.Deadline,
                 Status = t.Status,
-
                 Technologies = t.TaskTechnologies
-                .Select(tt => new TechnologyDto { Id = tt.Technology.Id, Name = tt.Technology.Name })
-                .ToList()
+                .Select(tt => new TechnologyDto
+                {
+                    Id = tt.Technology.Id,
+                    Name = tt.Technology.Name
+                }).ToList()
             }).ToList();
+
+            return new PagedResultDto<TaskDto>
+            {
+                Data = data,
+                Total = total,
+                Page = page,
+                Limit = limit
+            };
 
         }
 
@@ -80,6 +98,28 @@ namespace WorkService.Services
             };
 
             return dto;
+        }
+
+        public async Task<List<FilteredTaskDto>> GetFiltered()
+        {
+            var tasks = await _context.Tasks
+                .Include(t => t.TaskTechnologies)
+                .ThenInclude(tt => tt.Technology)
+                .ToListAsync();
+
+            return tasks.Select(t => new FilteredTaskDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Budget = t.Budget,
+                Specialization = t.Specialization,
+                Technologies = t.TaskTechnologies
+                .Select(tt=>new TechnologyDto
+                {
+                    Id = tt.Technology.Id,
+                    Name = tt.Technology.Name
+                }).ToList()
+            }).ToList();
         }
 
         public async Task<TaskDto> Create(CreateTaskDto dto, Guid userId)

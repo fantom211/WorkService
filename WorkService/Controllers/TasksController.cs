@@ -21,9 +21,20 @@ namespace WorkService.Controllers
 
         // GET: api/tasks
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int page=1, [FromQuery] int limit = 10)
         {
-            var tasks = await _service.GetAll();
+            const int maxLimit = 50;
+
+            if (page < 1)
+                page = 1;
+
+            if (limit < 1)
+                limit = 10;
+
+            if (limit > maxLimit)
+                limit = maxLimit;
+
+            var tasks = await _service.GetAll(page, limit);
             return Ok(tasks);
         }
 
@@ -36,6 +47,14 @@ namespace WorkService.Controllers
 
             return Ok(task);
         }
+
+        [HttpGet("filtered")]
+        public async Task<IActionResult> GetFiltered()
+        {
+            var tasks = await _service.GetFiltered();
+            return Ok(tasks);
+        }
+
 
         // POST: api/tasks
         [HttpPost]
