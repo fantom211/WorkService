@@ -15,7 +15,6 @@ namespace WorkService.Services
 
         private readonly AppDbContext _context;
         private NotificationService _notifyService;
-        private readonly HttpClient _httpClient;
         private readonly ServiceProposal _proposalService;
 
         public TaskService(
@@ -26,7 +25,6 @@ namespace WorkService.Services
         {
             _context = context;
             _notifyService = notifyService;
-            _httpClient = httpClient;
             _proposalService = proposalService;
         }
 
@@ -360,6 +358,6 @@ namespace WorkService.Services
 
         }
 
-        
+
     }
 }

@@ -7,25 +7,20 @@ using WorkService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Регистрация сервисов
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Подключение к БД
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//DI для репозиториев и сервисов
+//DI пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 builder.Services.AddScoped<TaskRepository>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ServiceProposal>();
-
-builder.Services.AddHttpClient<TaskService>(client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5211/"); // WorkService
-});
 
 builder.Services.AddControllers()
 .AddJsonOptions(options =>
@@ -34,7 +29,9 @@ builder.Services.AddControllers()
     options.JsonSerializerOptions.WriteIndented = true;
 });
 
-//Создание приложения 
+builder.WebHost.UseUrls("http://0.0.0.0:8080");
+
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 var app = builder.Build();
 
 //Middleware
