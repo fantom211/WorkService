@@ -7,6 +7,7 @@ using WorkService.Models.DTOs;
 using WorkService.Models.Entities;
 using WorkService.Models.Enums;
 using WorkService.Repositories;
+using static WorkService.Exceptions.MyCustomExceptions;
 
 namespace WorkService.Services
 {
@@ -129,7 +130,7 @@ namespace WorkService.Services
                 .ThenInclude(tt=>tt.Technology)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
-            if (task == null) return null;
+            if (task == null) throw new NotFoundException("Задача не найдена");
 
             var dto = new TaskDto
             {
@@ -175,6 +176,18 @@ namespace WorkService.Services
 
         public async Task<TaskDto> Create(CreateTaskDto dto, Guid userId)
         {
+            if (userId == Guid.Empty)
+                throw new BadRequestException("Пользователь не определён");
+
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                throw new BadRequestException("Название обязательно");
+
+            if (dto.Budget <= 0)
+                throw new BadRequestException("Бюджет должен быть больше 0");
+
+            if (dto.Technologies == null || !dto.Technologies.Any())
+                throw new BadRequestException("Укажите хотя бы одну технологию");
+
             var normalizedTechs = dto.Technologies
                 .Select(t=>t.Trim().ToLower())
                 .Distinct()
@@ -236,7 +249,7 @@ namespace WorkService.Services
         public async Task Delete(Guid id)
         {
             var task = await _context.Tasks.FindAsync(id);
-            if (task == null) return;
+            if (task == null) throw new NotFoundException("Задача не найдена"); ;
 
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
@@ -245,7 +258,7 @@ namespace WorkService.Services
         public async Task<bool> UpdateStatus(Guid taskId, StatusTask status = StatusTask.InProgress)
         {
             var task = await _context.Tasks.FindAsync(taskId);
-            if (task == null) return false;
+            if (task == null) throw new NotFoundException("Задача не найдена"); ;
 
             if(status == StatusTask.TaskReady)
             {
@@ -273,7 +286,7 @@ namespace WorkService.Services
         public async Task HandleProposalAccepted(Guid taskId)
         {
             var task = await _context.Tasks.FindAsync(taskId);
-            if (task == null) return;
+            if (task == null) throw new NotFoundException("Задача не найдена");
 
             task.Status = StatusTask.InProgress;
             await _context.SaveChangesAsync();
@@ -286,7 +299,7 @@ namespace WorkService.Services
                 .ThenInclude(tt => tt.Technology)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
-            if (task == null) return null;
+            if (task == null) throw new NotFoundException("Задача не найдена"); ;
 
             //частичное обновление полей
             if (!string.IsNullOrWhiteSpace(dto.Title))
@@ -305,7 +318,7 @@ namespace WorkService.Services
                 task.Specialization = dto.Specialization;
 
             if (dto.Deadline.HasValue)
-                task.Deadline = dto.Deadline;
+                task.Deadline = dto.Deadline.Value.ToUniversalTime();
 
             if (dto.Status.HasValue)
                 task.Status = dto.Status.Value;
@@ -329,7 +342,6 @@ namespace WorkService.Services
                     .Select(t => new Technology { Name = t })
                     .ToList();
 
-                //добавление новых технологий в базу
                 _context.Technologies.AddRange(newTechs);
                 await _context.SaveChangesAsync();
 
