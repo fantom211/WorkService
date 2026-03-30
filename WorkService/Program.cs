@@ -32,6 +32,7 @@ builder.Services.AddControllers()
 {
     options.JsonSerializerOptions.ReferenceHandler = null;
     options.JsonSerializerOptions.WriteIndented = true;
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 //Создание приложения 
