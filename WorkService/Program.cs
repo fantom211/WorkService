@@ -35,6 +35,8 @@ builder.Services.AddControllers()
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddProblemDetails();
+
 //Создание приложения 
 var app = builder.Build();
 
@@ -44,7 +46,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 //app.UseHttpsRedirection();
 
 app.MapControllers();
