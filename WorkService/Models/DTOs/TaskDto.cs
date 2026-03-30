@@ -12,7 +12,7 @@ namespace WorkService.Models.DTOs
         public string Specialization { get; set; } 
         public Guid CreatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
         public StatusTask Status { get; set; }
         public List<TechnologyDto> Technologies { get; set; } = new List<TechnologyDto>();
     }

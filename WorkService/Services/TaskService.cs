@@ -55,7 +55,7 @@ namespace WorkService.Services
                 Category = t.Category,
                 Specialization = t.Specialization,
                 CreatedAt = t.CreatedAt,
-                Deadline = (DateTime)t.Deadline,
+                Deadline = t.Deadline,
                 Status = t.Status,
                 Technologies = t.TaskTechnologies
                 .Select(tt => new TechnologyDto
@@ -93,7 +93,7 @@ namespace WorkService.Services
                     Budget = (float)t.Budget,
                     Category = t.Category,
                     Specialization = t.Specialization,
-                    Deadline = (DateTime)t.Deadline,
+                    Deadline = t.Deadline,
                     Status = t.Status,
                     Technologies = t.TaskTechnologies
                     .Select(tt => new TechnologyDto
@@ -141,7 +141,7 @@ namespace WorkService.Services
                 Category = task.Category,
                 Specialization = task.Specialization,
                 CreatedAt = task.CreatedAt,
-                Deadline = task.Deadline ?? default(DateTime),
+                Deadline = task.Deadline,
                 Status = task.Status,
                 Technologies = task.TaskTechnologies
                 .Select(tt => new TechnologyDto { Id = tt.Technology.Id, Name = tt.Technology.Name })
@@ -218,7 +218,7 @@ namespace WorkService.Services
                 Budget = task.Budget,
                 Category = task.Category,
                 CreatedAt = task.CreatedAt,
-                Deadline = task.Deadline ?? default(DateTime),
+                Deadline = task.Deadline,
                 Specialization = task.Specialization,
                 CreatedByUserId = task.CreatedByUserId,
                 Technologies = task.TaskTechnologies
