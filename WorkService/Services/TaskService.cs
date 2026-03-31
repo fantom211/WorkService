@@ -123,7 +123,6 @@ namespace WorkService.Services
                 Limit = limit
             };
         }
-
         public async Task<TaskDto> GetById(Guid id)
         {
             var task = await _context.Tasks
