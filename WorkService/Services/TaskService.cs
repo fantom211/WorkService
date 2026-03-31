@@ -15,15 +15,15 @@ namespace WorkService.Services
     {
 
         private readonly AppDbContext _context;
-        private NotificationService _notifyService;
+        private NotificationServiceClient _notifyService;
         private readonly HttpClient _httpClient;
-        private readonly ServiceProposal _proposalService;
+        private readonly ProposalServiceClient _proposalService;
 
         public TaskService(
             AppDbContext context,
-            NotificationService notifyService,
+            NotificationServiceClient notifyService,
             HttpClient httpClient,
-            ServiceProposal proposalService)
+            ProposalServiceClient proposalService)
         {
             _context = context;
             _notifyService = notifyService;
@@ -260,10 +260,11 @@ namespace WorkService.Services
             var task = await _context.Tasks.FindAsync(taskId);
             if (task == null) throw new NotFoundException("Задача не найдена"); ;
 
-            if(status == StatusTask.TaskReady)
+            if (status == StatusTask.TaskReady)
             {
                 await _notifyService.SendNotificationAsync(new NotificationDto
                 {
+                    Title = task.Title,
                     Type = "TASK_READY",
                     Recipient = new Recipient { UserId = task.CreatedByUserId }
                 });
@@ -273,6 +274,7 @@ namespace WorkService.Services
             {
                 await _notifyService.SendNotificationAsync(new NotificationDto
                 {
+                    Title = task.Title,
                     Type = "TASK_CANCELED",
                     Recipient = new Recipient { UserId = task.CreatedByUserId }
                 });
@@ -371,7 +373,5 @@ namespace WorkService.Services
             };
 
         }
-
-        
     }
 }

@@ -2,12 +2,10 @@
 
 namespace WorkService.Services
 {
-    public class ServiceProposal
+    public class ProposalServiceClient
     {
         private readonly HttpClient _httpClient;
-        private const string Url = "http://localhost:5211/api/proposals/by-tasks";
-
-        public ServiceProposal(HttpClient httpClient)
+        public ProposalServiceClient(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
@@ -15,7 +13,7 @@ namespace WorkService.Services
         public async Task<Dictionary<Guid, List<Guid>>> GetExecutorsByTaskIds(List<Guid> taskIds)
         {
             var response = await _httpClient.PostAsJsonAsync(
-                Url,
+                "api/proposals/by-tasks",
                 new { taskIds });
 
             response.EnsureSuccessStatusCode();

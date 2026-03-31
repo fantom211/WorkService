@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ProposalService.Services;
 using System.Text.Json.Serialization;
 using WorkService.Data;
+using WorkService.Exceptions;
 using WorkService.Repositories;
 using WorkService.Services;
 
@@ -19,8 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //DI дл€ репозиториев и сервисов
 builder.Services.AddScoped<TaskRepository>();
 builder.Services.AddScoped<TaskService>();
-builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<ServiceProposal>();
+builder.Services.AddScoped<NotificationServiceClient>();
+builder.Services.AddScoped<ProposalServiceClient>();
 
 builder.Services.AddHttpClient<TaskService>(client =>
 {
@@ -34,9 +35,20 @@ builder.Services.AddControllers()
     options.JsonSerializerOptions.WriteIndented = true;
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
-
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddHttpClient<ProposalServiceClient>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["Services:ProposalService"]);
+});
+
+builder.Services.AddHttpClient<NotificationServiceClient>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["Services:NotificationService"]);
+});
 //—оздание приложени€ 
 var app = builder.Build();
 
