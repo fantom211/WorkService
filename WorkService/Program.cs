@@ -36,13 +36,21 @@ builder.Services.AddHttpClient<TaskService>(client =>
 builder.Services.AddHttpClient<ProposalServiceClient>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    client.BaseAddress = new Uri(config["Services:ProposalService"]);
+    var url = config["ExternalServices:WorkService"]; 
+    if (string.IsNullOrEmpty(url))
+        throw new InvalidOperationException("WorkService URL is not configured.");
+
+    client.BaseAddress = new Uri(url);
 });
 
 builder.Services.AddHttpClient<NotificationServiceClient>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    client.BaseAddress = new Uri(config["Services:NotificationService"]);
+    var url = config["ExternalServices:NotificationService"]; 
+    if (string.IsNullOrEmpty(url))
+        throw new InvalidOperationException("NotificationService URL is not configured.");
+
+    client.BaseAddress = new Uri(url);
 });
 
 // Глобальный обработчик исключений
