@@ -115,13 +115,21 @@ namespace WorkService.Services
             if(tasks.Any())
             {
                 var taskIds = tasks.Select(t => t.Id).ToList();
-                var executorsMap = await _proposalService.GetExecutorsByTaskIds(taskIds);
+                Dictionary<Guid, List<Guid>> executorsMap = new Dictionary<Guid, List<Guid>>();
+                try
+                {
+                    executorsMap = await _proposalService.GetExecutorsByTaskIds(taskIds);
+                }
+                catch
+                {
+                    executorsMap = new Dictionary<Guid, List<Guid>>();
+                }
                 foreach (var task in tasks)
                 {
-                    if (executorsMap.TryGetValue(task.Id, out var executors))
-                    {
-                        task.Executors = executors;
-                    }
+                    if (!executorsMap.TryGetValue(task.Id, out var executors) || executors == null)
+                        executors = new List<Guid>();
+
+                    task.Executors = executors;
                 }
             }
             
