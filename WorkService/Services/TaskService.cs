@@ -46,25 +46,31 @@ namespace WorkService.Services
                 .Take(limit)
                 .ToListAsync();
 
-            var data = tasks.Select(t => new TaskDto
+            var data = new List<TaskDto>();
+
+            if(tasks.Any())
             {
-                Id = t.Id,
-                CreatedByUserId = t.CreatedByUserId,
-                Title = t.Title,
-                Description = t.Description,
-                Budget = t.Budget,
-                Category = t.Category,
-                Specialization = t.Specialization,
-                CreatedAt = t.CreatedAt,
-                Deadline = t.Deadline,
-                Status = t.Status,
-                Technologies = t.TaskTechnologies
+                data = tasks.Select(t => new TaskDto
+                {
+                    Id = t.Id,
+                    CreatedByUserId = t.CreatedByUserId,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Budget = t.Budget,
+                    Category = t.Category,
+                    Specialization = t.Specialization,
+                    CreatedAt = t.CreatedAt,
+                    Deadline = t.Deadline,
+                    Status = t.Status,
+                    Technologies = t.TaskTechnologies
                 .Select(tt => new TechnologyDto
                 {
                     Id = tt.Technology.Id,
                     Name = tt.Technology.Name
                 }).ToList()
-            }).ToList();
+                }).ToList();
+            }
+            
 
             return new PagedResultDto<TaskDto>
             {
@@ -104,17 +110,21 @@ namespace WorkService.Services
                     }).ToList()
                 }).ToListAsync();
 
-            var taskIds = tasks.Select(t => t.Id).ToList();
-            var executorsMap = await _proposalService.GetExecutorsByTaskIds(taskIds);
+            
 
-            foreach (var task in tasks)
+            if(tasks.Any())
             {
-                if (executorsMap.TryGetValue(task.Id, out var executors))
+                var taskIds = tasks.Select(t => t.Id).ToList();
+                var executorsMap = await _proposalService.GetExecutorsByTaskIds(taskIds);
+                foreach (var task in tasks)
                 {
-                    task.Executors = executors;
+                    if (executorsMap.TryGetValue(task.Id, out var executors))
+                    {
+                        task.Executors = executors;
+                    }
                 }
             }
-
+            
             return new PagedResultDto<MyTasksDto>
             {
                 Data = tasks,
