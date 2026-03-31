@@ -15,7 +15,7 @@ namespace WorkService.Services
     {
 
         private readonly AppDbContext _context;
-        private NotificationServiceClient _notifyService;
+        private readonly NotificationServiceClient _notifyService;
         private readonly HttpClient _httpClient;
         private readonly ProposalServiceClient _proposalService;
 
@@ -123,6 +123,7 @@ namespace WorkService.Services
                 Limit = limit
             };
         }
+
         public async Task<TaskDto> GetById(Guid id)
         {
             var task = await _context.Tasks
