@@ -8,22 +8,26 @@ using WorkService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//����������� ��������
+// Регистрация сервисов
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = null;
+        options.JsonSerializerOptions.WriteIndented = true;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//����������� � ��
+// Подключение к БД
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//DI ��� ������������ � ��������
+// Репозитории
 builder.Services.AddScoped<TaskRepository>();
-builder.Services.AddScoped<TaskService>();
-builder.Services.AddScoped<NotificationServiceClient>();
-builder.Services.AddScoped <ProposalServiceClient>();
 
-// ������� � HttpClient
+// Сервисы с HttpClient
 builder.Services.AddHttpClient<TaskService>(client =>
 {
     client.BaseAddress = new Uri("http://localhost:5211/"); // WorkService
@@ -40,15 +44,15 @@ builder.Services.AddHttpClient<NotificationServiceClient>((sp, client) =>
     var config = sp.GetRequiredService<IConfiguration>();
     client.BaseAddress = new Uri(config["Services:NotificationService"]);
 });
+
+// Глобальный обработчик исключений
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-builder.Services.AddProblemDetails();
-
-//�������� ���������� 
+// Создание приложения
 var app = builder.Build();
 
-//Middleware
+// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -57,6 +61,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+// app.UseHttpsRedirection();
 
 app.MapControllers();
 
