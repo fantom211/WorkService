@@ -36,9 +36,9 @@ builder.Services.AddHttpClient<TaskService>(client =>
 builder.Services.AddHttpClient<ProposalServiceClient>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var url = config["ExternalServices:WorkService"]; 
+    var url = config["ExternalServices:ProposalService"]; 
     if (string.IsNullOrEmpty(url))
-        throw new InvalidOperationException("WorkService URL is not configured.");
+        throw new InvalidOperationException("ProposalService URL is not configured.");
 
     client.BaseAddress = new Uri(url);
 });
