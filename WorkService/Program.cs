@@ -20,6 +20,18 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // Подключение к БД
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -46,7 +58,11 @@ builder.Services.AddHttpClient<ProposalServiceClient>((sp, client) =>
 builder.Services.AddHttpClient<NotificationServiceClient>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var url = config["ExternalServices:NotificationService"]; 
+    var enabled = config.GetValue<bool>("ExternalServices:NotificationServiceEnabled");
+
+    if (!enabled) return;
+
+    var url = config["ExternalServices:NotificationService"];
     if (string.IsNullOrEmpty(url))
         throw new InvalidOperationException("NotificationService URL is not configured.");
 
@@ -60,6 +76,7 @@ builder.Services.AddProblemDetails();
 // Создание приложения
 var app = builder.Build();
 
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -72,9 +89,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors("Frontend");
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+
 // app.UseHttpsRedirection();
 
 app.MapControllers();

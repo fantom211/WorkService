@@ -1,0 +1,34 @@
+﻿version: "3.9"
+
+services:
+
+  work-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: work-service
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=work-service-db;Port=5432;Database=WorkServiceDb;Username=postgres;Password=admin
+      - ExternalServices__ProposalService=http://proposal-service:8080/
+      - ExternalServices__NotificationService=http://notification-service:8080/
+      - ExternalServices__NotificationServiceEnabled=false
+    depends_on:
+      - work-service-db
+    restart: always
+
+  work-service-db:
+    image: postgres:16
+    container_name: work-service-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: WorkServiceDb
+    volumes:
+      - work_db:/var/lib/postgresql/data
+
+volumes:
+  work_db:
