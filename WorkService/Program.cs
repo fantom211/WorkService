@@ -39,11 +39,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Репозитории
 builder.Services.AddScoped<TaskRepository>();
 
-// Сервисы с HttpClient
-builder.Services.AddHttpClient<TaskService>(client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5211/"); // WorkService
-});
 
 builder.Services.AddHttpClient<ProposalServiceClient>((sp, client) =>
 {
